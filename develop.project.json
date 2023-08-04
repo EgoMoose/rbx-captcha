@@ -1,0 +1,15 @@
+{
+	"name": "rbx-captcha",
+	"tree": {
+		"$className": "DataModel",
+		"ServerScriptService": {
+			"$className": "ServerScriptService",
+			"ServerPackages": {
+				"$path": "ServerPackages",
+				"RbxCaptcha": {
+					"$path": "src"
+				}
+			}
+		}
+	}
+}
