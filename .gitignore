@@ -1,6 +1,13 @@
 /ServerPackages
 /Packages
 /assets
+/lune
+
+/.vscode
+
+/fonts/*.lua
+/fonts/*.ttf
+/fonts/*.otf
 
 sourcemap.json
 wally.lock
