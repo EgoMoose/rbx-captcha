@@ -1,6 +1,4 @@
-import os
-import re
-import bpy
+import os, re, bpy, json
 
 CHARACTERS = re.sub(r"\s+", "", """
     ABCDEFGHIJKLMNOPQRSTUVWXYZ
@@ -19,7 +17,7 @@ def remove_collection(collection):
     bpy.data.collections.remove(collection)
 
 def get_lua(fnt, characters):
-    entries = []
+    entries = {}
     
     font = bpy.data.collections.new("FontCollection")
     font.name = "Font"
@@ -56,23 +54,24 @@ def get_lua(fnt, characters):
         mesh = font_obj.data
         mesh.calc_loop_triangles()
         for vertex in mesh.vertices:
-            vertices.append("Vector3.new({}, {}, 0),".format(vertex.co[0], vertex.co[1]))
+            vertices.append([vertex.co[0], vertex.co[1]])
         
         for tri in mesh.loop_triangles:
-            faces.append("{{{}, {}, {}}},".format(tri.vertices[0] + 1, tri.vertices[1] + 1, tri.vertices[2] + 1))
+            faces.append([tri.vertices[0] + 1, tri.vertices[1] + 1, tri.vertices[2] + 1])
+
+        size = [font_obj.dimensions.x, font_obj.dimensions.y]
         
-        size = "Vector3.new({}, {}, 0)".format(font_obj.dimensions.x, font_obj.dimensions.y)
-        faces = "{\n" + indent("\n".join(faces), 1) + "\n}"
-        vertices = "{\n" + indent("\n".join(vertices), 1) + "\n}"
-        
-        body = "size = {},\nfaces = {},\nvertices = {},".format(size, faces, vertices)
-        entry = "[\"{}\"] = {{\n{}\n}},".format(character, indent(body, 1))
-        entries.append(entry)
+        entry = {
+            "size": size,
+            "faces": faces,
+            "vertices": vertices,
+        }
+
+        entries[character] = entry
 
     remove_collection(font)
-    lua = "return {\n" + indent("\n".join(entries), 1) + "\n}"
-    
-    return lua
+    return json.dumps(entries)
+
 
 
 # ----------------------------------------------------------------------
@@ -83,7 +82,6 @@ from bpy.types import Operator
 
 
 class OT_TestOpenFilebrowser(Operator, ImportHelper):
-
     bl_idname = "test.open_filebrowser"
     bl_label = "Open"
     
@@ -93,12 +91,10 @@ class OT_TestOpenFilebrowser(Operator, ImportHelper):
     )
 
     def execute(self, context):
-        """Do something with the selected file(s)."""
-
         fnt = bpy.data.fonts.load(self.filepath)
         lua = get_lua(fnt, CHARACTERS)
         
-        filename = os.path.splitext(os.path.basename(self.filepath))[0] + ".lua"
+        filename = os.path.splitext(os.path.basename(self.filepath))[0] + ".json"
         new_file = os.path.join(self.filepath, os.path.pardir, filename)
         new_file = os.path.realpath(new_file)
         
@@ -108,10 +104,8 @@ class OT_TestOpenFilebrowser(Operator, ImportHelper):
         
         return {'FINISHED'}
 
-
 def register():
     bpy.utils.register_class(OT_TestOpenFilebrowser)
-
 
 def unregister():
     bpy.utils.unregister_class(OT_TestOpenFilebrowser)
