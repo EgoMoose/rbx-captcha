@@ -1,6 +1,9 @@
 {
 	"name": "rbx-captcha",
 	"tree": {
-		"$path": "src"
+		"$path": "src",
+		"FontsJSON": {
+			"$path": "lune/exported"
+		}
 	}
 }
