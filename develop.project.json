@@ -12,6 +12,9 @@
 						"$path": "lune/exported"
 					}
 				}
+			},
+			"Demo": {
+				"$path": "demo"
 			}
 		}
 	}
