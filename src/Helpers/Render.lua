@@ -1,6 +1,6 @@
 --!strict
 
-local Fonts = require(script.Parent:WaitForChild("Fonts"))
+local Fonts = require(script.Parent.Parent:WaitForChild("Fonts"))
 local QuadToQuad = require(script.Parent:WaitForChild("QuadToQuad"))
 
 type Properties = {[string]: any}
@@ -141,4 +141,5 @@ function module.glyph(glyph: Fonts.Glyph, scale: number, transformQuad: QuadToQu
 
 	return model
 end
+
 return module

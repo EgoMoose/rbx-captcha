@@ -9,7 +9,10 @@ export type Glyph = {
 	faces: {{number}},
 }
 
-export type Font = {[string]: Glyph}
+export type Font = {
+	glyphs: {[string]: Glyph},
+	characters: {[string]: boolean},
+}
 
 local function toVector3(arr: {number}): Vector3
 	return Vector3.new(arr[1], arr[2], 0)
@@ -28,6 +31,8 @@ local function getFonts(parent: Instance): {[string]: Font}
 		end
 
 		local glyphs: {[string]: Glyph} = {}
+		local characters: {[string]: boolean} = {}
+
 		local decoded = HttpService:JSONDecode(table.concat(partitions))
 
 		for character, unconvertedGlyph in decoded do
@@ -42,9 +47,13 @@ local function getFonts(parent: Instance): {[string]: Font}
 			end
 
 			glyphs[character] = glyph
+			characters[character] = true
 		end
 
-		fonts[fontFolder.Name] = glyphs
+		fonts[fontFolder.Name] = {
+			glyphs = glyphs,
+			characters = characters,
+		}
 	end
 
 	return fonts
