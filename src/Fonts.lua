@@ -14,6 +14,10 @@ export type Font = {
 	characters: {[string]: boolean},
 }
 
+local module = {}
+
+-- Private
+
 local function toVector3(arr: {number}): Vector3
 	return Vector3.new(arr[1], arr[2], 0)
 end
@@ -59,6 +63,31 @@ local function getFonts(parent: Instance): {[string]: Font}
 	return fonts
 end
 
+-- Public
+
 local fonts = getFonts(FontsJSON)
 FontsJSON:Destroy()
-return fonts
+
+function module.get(name: string): Font
+	return fonts[name]
+end
+
+function module.getCharacterIntersection(fonts: {Font}): {[string]: boolean}
+	local counts = {}
+	for _, font in fonts do
+		for character, _ in font.characters do
+			counts[character] = (counts[character] or 0) + 1
+		end
+	end
+
+	local intersection = {}
+	for character, count in counts do
+		if count == #fonts then
+			intersection[character] = true
+		end
+	end
+
+	return intersection
+end
+
+return module

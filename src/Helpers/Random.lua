@@ -1,6 +1,9 @@
 --!strict
 
+local Fonts = require(script.Parent.Parent:WaitForChild("Fonts"))
 local QuadToQuad = require(script.Parent:WaitForChild("QuadToQuad"))
+
+local TextService = game:GetService("TextService")
 
 local module = {}
 local random = Random.new()
@@ -19,7 +22,42 @@ local function randomArr(n: number, min: number, max: number): {number}
 	return arr
 end
 
+local function randomAnswer(length: number, fonts: {Fonts.Font}): string
+	local arr = {}
+	for character, _ in Fonts.getCharacterIntersection(fonts) do
+		table.insert(arr, character)
+	end
+
+	local result = ""
+	for i = 1, length do
+		local character = arr[random:NextInteger(1, #arr) + 1] or " "
+		result = result .. character
+	end
+
+	return result
+end
+
+local function filterText(player: Player, text: string): string?
+	local filteredTextResult = nil
+	local success, _errorMessage = pcall(function()
+		filteredTextResult = TextService:FilterStringAsync(text, player.UserId)
+	end)
+
+	if success and filteredTextResult then
+		local filteredText = filteredTextResult:GetNonChatStringForBroadcastAsync()
+		if not filteredText:match("#") then
+			return filteredText
+		end
+	end
+	
+	return nil
+end
+
 -- Public
+
+function module.integer(min: number, max: number): number
+	return random:NextInteger(min, max)
+end
 
 function module.number(min: number, max: number): number
 	return lerpNumber(min, max, random:NextNumber())
@@ -37,6 +75,17 @@ end
 function module.color(min: number, max: number): Color3
 	local rgb = randomArr(3, min, max)
 	return Color3.fromRGB(unpack(rgb))
+end
+
+function module.answer(player: Player?, length: number, fonts: {Fonts.Font}): string
+	while true do
+		local answer = randomAnswer(length, fonts)
+		local filtered = if player then filterText(player, answer) else answer
+
+		if filtered then
+			return filtered
+		end
+	end
 end
 
 --

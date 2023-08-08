@@ -1,31 +1,15 @@
 --!strict
 
 local Fonts = require(script.Parent.Parent:WaitForChild("Fonts"))
+
+local AABB = require(script.Parent:WaitForChild("AABB"))
 local QuadToQuad = require(script.Parent:WaitForChild("QuadToQuad"))
 
 type Properties = {[string]: any}
 
 local module = {}
 
-local function getAABB(vertices: {Vector3}): (Vector3, Vector3)
-	local maxX, maxY, maxZ = -math.huge, -math.huge, -math.huge
-	local minX, minY, minZ = math.huge, math.huge, math.huge
-
-	for _, vertex in vertices do
-		local x, y, z = vertex.X, vertex.Y, vertex.Z
-		maxX = math.max(maxX, x)
-		maxY = math.max(maxY, y)
-		maxZ = math.max(maxZ, z)
-		minX = math.min(minX, x)
-		minY = math.min(minY, y)
-		minZ = math.min(minZ, z)
-	end
-
-	local maxV = Vector3.new(maxX, maxY, maxZ)
-	local minV = Vector3.new(minX, minY, minZ)
-
-	return maxV, minV
-end
+-- Public
 
 function module.circle(position: Vector3, radius: number, properties: Properties): BasePart
 	local cylinder = Instance.new("Part")
@@ -40,6 +24,48 @@ function module.circle(position: Vector3, radius: number, properties: Properties
 	end
 	
 	return cylinder
+end
+
+function module.curve(a: Vector3, b: Vector3, c:Vector3, properties: Properties): Model
+	local function bezier(t: number)
+		local u = a:Lerp(b, t)
+		local v = b:Lerp(c, t)
+		return u:Lerp(v, t)
+	end
+	
+	local edgeVertices = {}
+	for i = 0, 1, 0.1 do
+		local pi = bezier(i)
+		local pj = bezier(i + 0.1)
+		
+		local right = (pi - pj):Cross(Vector3.zAxis).Unit
+		
+		table.insert(edgeVertices, {
+			r = pi + right * 0.1,
+			l = pi - right * 0.1
+		})
+	end
+	
+	local model = Instance.new("Model")
+	model.Name = "Curve"
+	
+	local count = 0
+	for i = 1, #edgeVertices - 1 do
+		local evi = edgeVertices[i]
+		local evj = edgeVertices[i + 1]
+		
+		count = count + 1
+		local triangle1 = module.triangle(evi.l, evi.r, evj.l, properties)
+		triangle1.Name = tostring(count)
+		triangle1.Parent = model
+		
+		count = count + 1
+		local triangle2 = module.triangle(evj.l, evj.r, evi.r, properties)
+		triangle2.Name = tostring(count)
+		triangle2.Parent = model
+	end
+	
+	return model
 end
 
 function module.triangle(a: Vector3, b: Vector3, c: Vector3, properties: Properties): Model
@@ -101,16 +127,7 @@ function module.glyph(glyph: Fonts.Glyph, scale: number, transformQuad: QuadToQu
 	end
 
 	local model = Instance.new("Model")
-	local maxV, minV = getAABB(mutatedVertices)
-
-	local primary = Instance.new("Part")
-	primary.Name = "Center"
-	primary.CFrame = CFrame.fromEulerAnglesXYZ(0, math.pi, 0)
-	primary.Size = glyph.size * scale
-	primary.Anchored = true
-	primary.CanCollide = false
-	primary.Transparency = 1
-	primary.Parent = model
+	local maxV, minV = AABB.get(mutatedVertices)
 
 	local aabb = Instance.new("Part")
 	aabb.Name = "AABB"
@@ -121,7 +138,7 @@ function module.glyph(glyph: Fonts.Glyph, scale: number, transformQuad: QuadToQu
 	aabb.Transparency = 1
 	aabb.Parent = model
 
-	model.PrimaryPart = primary
+	model.WorldPivot = CFrame.fromEulerAnglesXYZ(0, math.pi, 0)
 	
 	local triangles = Instance.new("Model")
 	triangles.Name = "Triangles"
