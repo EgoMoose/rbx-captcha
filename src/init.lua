@@ -41,8 +41,13 @@ function module.generate(player: Player?, length: number): (string, Model)
 	}
 
 	local answer = Random.answer(player, length, fonts)
+
 	local captcha = Instance.new("Model")
 	captcha.Name = "Captcha"
+
+	local rendered = Instance.new("Model")
+	rendered.Name = "Rendered"
+	rendered.Parent = captcha
 
 	local bounds = {}
 	for i = 1, #answer do
@@ -63,7 +68,7 @@ function module.generate(player: Player?, length: number): (string, Model)
 
 			glyphModel.Name = char
 			glyphModel:PivotTo(CFrame.new(-i * 5, height, 0) * CFrame.fromEulerAnglesXYZ(0, 0, rotation))
-			glyphModel.Parent = captcha
+			glyphModel.Parent = rendered
 
 			local aabb = glyphModel:FindFirstChild("AABB")
 			if aabb and aabb:IsA("BasePart") then
@@ -100,7 +105,7 @@ function module.generate(player: Player?, length: number): (string, Model)
 			CastShadow = false,
 		})
 
-		dot.Parent = captcha
+		dot.Parent = rendered
 	end
 
 	for i = 1, Random.integer(3, 6) do
@@ -121,11 +126,25 @@ function module.generate(player: Player?, length: number): (string, Model)
 			CastShadow = false,
 		})
 
-		curve.Parent = captcha
+		curve.Parent = rendered
 	end
 
 	captcha.PrimaryPart = aabb
 	captcha:PivotTo(CFrame.new(0, 0, 0) * CFrame.fromEulerAnglesXYZ(0, 0, Random.number(-1, 1) * math.rad(10)))
+
+	local parts = {}
+	for _, child in rendered:GetDescendants() do
+		if child:IsA("BasePart") and child.Name ~= "AABB" then
+			table.insert(parts, child)
+			child.Parent = nil
+		end
+	end
+
+	rendered:ClearAllChildren()
+
+	for _, part in parts do
+		part.Parent = rendered
+	end
 
 	return answer, captcha
 end
