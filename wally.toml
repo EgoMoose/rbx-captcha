@@ -7,4 +7,3 @@ private = true
 
 [server-dependencies]
 Promise = "evaera/promise@4.0.0"
-Sift = "csqrl/sift@0.0.6"

@@ -14,9 +14,19 @@ export type Font = {
 	characters: {[string]: boolean},
 }
 
+local REMOVED_CHARACTERS = {
+	"I", "l", "1", "i",
+	"0", "O", "o",
+}
+
 local module = {}
 
 -- Private
+
+local removedSet = {}
+for _, character in REMOVED_CHARACTERS do
+	removedSet[character] = true
+end
 
 local function toVector3(arr: {number}): Vector3
 	return Vector3.new(arr[1], arr[2], 0)
@@ -40,6 +50,10 @@ local function getFonts(parent: Instance): {[string]: Font}
 		local decoded = HttpService:JSONDecode(table.concat(partitions))
 
 		for character, unconvertedGlyph in decoded do
+			if removedSet[character] then
+				continue
+			end
+
 			local glyph = {}
 
 			glyph.faces = unconvertedGlyph.faces

@@ -1,15 +1,35 @@
 --!strict
 
+local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local Helpers = script:WaitForChild("Helpers")
+local CaptchaClient = script:WaitForChild("CaptchaClient")
+
+local Request = CaptchaClient:WaitForChild("Request")
+local Respond = CaptchaClient:WaitForChild("Respond")
+
 local Fonts = require(script:WaitForChild("Fonts"))
 
 local AABB = require(Helpers:WaitForChild("AABB"))
 local Render = require(Helpers:WaitForChild("Render"))
 local Random = require(Helpers:WaitForChild("Random"))
 
+local Promise = require(script.Parent:WaitForChild("Promise"))
+
 local module = {}
 
 -- Private
+
+local progressing = {}
+local responseBind = Instance.new("BindableEvent")
+
+function Respond.OnServerInvoke(player: Player, unique: string, answer: string)
+	responseBind:Fire(player, unique, answer)
+	local result = progressing[unique]:expect()
+	progressing[unique] = nil
+	return result
+end
 
 -- Public
 
@@ -105,9 +125,35 @@ function module.generate(player: Player?, length: number): (string, Model)
 	end
 
 	captcha.PrimaryPart = aabb
-	captcha:PivotTo(CFrame.new(0, 10, 0) * CFrame.fromEulerAnglesXYZ(0, 0, Random.number(-1, 1) * math.rad(10)))
+	captcha:PivotTo(CFrame.new(0, 0, 0) * CFrame.fromEulerAnglesXYZ(0, 0, Random.number(-1, 1) * math.rad(10)))
 
 	return answer, captcha
 end
+
+function module.request(player: Player, length: number): boolean
+	local unique = HttpService:GenerateGUID()
+	local answer, model = module.generate(player, length)
+
+	local progress = Promise.fromEvent(responseBind.Event, function(sender: Player, sentUnique: string, sentAnswer: string)
+		return sender == player and sentUnique == unique
+	end):andThen(function(sender: Player, sentUnique: string, sentAnswer: string)
+		return sentAnswer:lower() == answer:lower():gsub(" ", "")
+	end)
+
+	model.Parent = player:WaitForChild("PlayerGui")
+
+	progressing[unique] = progress
+	Request:FireClient(player, unique, model)
+
+	local result = progress:expect()
+	model:Destroy()
+	return result
+end
+
+function module.setup()
+	CaptchaClient.Parent = ReplicatedStorage
+end
+
+--
 
 return module

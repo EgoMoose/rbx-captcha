@@ -1,7 +1,22 @@
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
 local ServerScriptService = game:GetService("ServerScriptService")
+
 local Captcha = require(ServerScriptService.ServerPackages.RbxCaptcha)
+local CaptchaApp = script:WaitForChild("CaptchaApp")
+local CaptchaUI = script:WaitForChild("CaptchaUI")
 
-local answer, model = Captcha.generate(nil, 10)
-model.Parent = workspace
+Captcha.setup()
 
-print(answer)
+CaptchaApp.Parent = CaptchaUI
+CaptchaUI.Parent = StarterGui
+
+Players.PlayerAdded:Connect(function(player: Player)
+	player.CharacterAdded:Wait()
+	task.wait(1)
+
+	while true do
+		local success = Captcha.request(player, 6)
+		print("Server", success)
+	end
+end)
