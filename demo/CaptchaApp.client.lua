@@ -13,27 +13,11 @@ local stroke = content:WaitForChild("Captcha"):WaitForChild("UIStroke")
 local strokeColor = stroke.Color
 
 local camera = Instance.new("Camera")
-camera.FieldOfView = 5
+camera.FieldOfView = 1
 camera.Parent = vpf
 vpf.CurrentCamera = camera
 
 local currentModel: Model? = nil
-
-local function getFitDistance(vpf: ViewportFrame, camera: Camera, model: Model): number
-	local aabb = model:FindFirstChild("AABB") :: BasePart
-	local radius = aabb.Size.Magnitude / 2
-	
-	local vpfSize = vpf.AbsoluteSize
-	local aspect = vpfSize.X / vpfSize.Y
-	
-	local yFov2 = math.rad(camera.FieldOfView / 2)
-	local tanyFov2 = math.tan(yFov2)
-	
-	local cFov2 = math.atan(tanyFov2 * math.max(1, aspect))
-	local sincFov2 = math.sin(cFov2)
-	
-	return radius / sincFov2
-end
 
 local function hide()
 	stroke.Color = strokeColor
@@ -54,10 +38,7 @@ local function show(unique: string, model: Model)
 	copy.Name = unique
 	copy.Parent = vpf
 	
-	local distance = getFitDistance(vpf, camera, copy)
-	
-	camera.Focus = CFrame.identity
-	camera.CFrame = CFrame.new(0, 0, -distance) * CFrame.fromEulerAnglesXYZ(0, math.pi, 0)
+	CaptchaClient.fit(copy, vpf, camera)
 	
 	model:Destroy()
 	currentModel = copy
