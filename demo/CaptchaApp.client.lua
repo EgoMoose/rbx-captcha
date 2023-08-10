@@ -1,5 +1,8 @@
 --!strict
 
+-- This is just an example of how you might use the captcha client
+-- The request is made from the server, the client sends back their response
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CaptchaClient = require(ReplicatedStorage:WaitForChild("CaptchaClient"))
 
