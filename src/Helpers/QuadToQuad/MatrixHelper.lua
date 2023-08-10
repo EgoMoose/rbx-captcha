@@ -7,62 +7,60 @@ local module = {}
 
 -- Private
 
-local function copy(A: Matrix): Matrix
+local function _matrixToString(M: Matrix): string
+	local lines = {}
+	for i = 1, #M do
+		table.insert(lines, "[" .. table.concat(M[i], ",") .. "]")
+	end
+	return "\n" .. table.concat(lines, "\n") .. "\n"
+end
+
+local function multiply(A: Matrix, B: Matrix): Matrix
 	local M = {}
-	for i = 1, #A do
-		M[i] = {}
-		for j = 1, #A[i] do
-			M[i][j] = A[i][j]
+	for r = 1, #A do
+		M[r] = {}
+		for c = 1, #B[1] do
+			M[r][c] = 0
+			for i = 1, #A[1] do
+				M[r][c] = M[r][c] + (A[r][i] * B[i][c])
+			end
 		end
 	end
 	return M
 end
 
-local function decomposeLUP(A: Matrix): (Matrix, Vector)
-	A = copy(A)
+local function pivot(M: Matrix): Matrix
+	local n = #M
 
-	local n = #A
-
-	local pi = {}
+	local I = {}
 	for i = 1, n do
-		pi[i] = i
-	end
-
-	for k = 1, n do
-		local k1 = 0
-		local p = 0
-		for i = k, n do
-			local abs = math.abs(A[i][k])
-			if abs > p then
-				p = abs
-				k1 = i
-			end
-		end
-
-		if p == 0 then
-			error("Singular matrix!")
-		end
-
-		pi[k], pi[k1] = pi[k1], pi[k]
-
-		for i = 1, n do
-			A[k][i], A[k1][i] = A[k1][i], A[k][i]
-		end
-
-		for i = k + 1, n do
-			A[i][k] = A[i][k] / A[k][k]
-			for j = k + 1, n do
-				A[i][j] = A[i][j] - A[i][k] * A[k][j]
-			end
+		I[i] = {}
+		for j = 1, n do
+			I[i][j] = if (i == j) then 1 else 0
 		end
 	end
 
-	return A, pi
+	for i = 1, n do
+		local row = i
+		local maxm = math.abs(M[i][i])
+		for j = i, n do
+			local abs = math.abs(M[j][i])
+			if abs > maxm then
+				maxm = abs
+				row = j
+			end
+		end
+
+		if i ~= row then
+			I[i], I[row] = I[row], I[i]
+		end
+	end
+
+	return I
 end
 
-local function splitLU(A: Matrix): (Matrix, Matrix)
-	local n = #A
-
+local function decomposeLU(M: Matrix): (Matrix, Matrix)
+	local n = #M
 	local L, U = {}, {}
 	for i = 1, n do
 		L[i], U[i] = {}, {}
@@ -72,41 +70,57 @@ local function splitLU(A: Matrix): (Matrix, Matrix)
 	end
 
 	for i = 1, n do
-		L[i][i] = 1
-		for j = 1, i - 1 do
-			L[i][j] = A[i][j]
+		for k = i, n do
+			local sum = 0
+			for j = 1, i do
+				sum = sum + (L[i][j] * U[j][k])
+			end
+			U[i][k] = M[i][k] - sum
 		end
-	end
 
-	for i = 1, n do
-		for j = i, n do
-			U[i][j] = A[i][j]
+		for k = i, n do
+			if i == k then
+				L[i][i] = 1
+			else
+				local sum = 0
+				for j = 1, i do
+					sum = sum + (L[k][j] * U[j][i])
+				end
+				L[k][i] = (M[k][i] - sum) / U[i][i]
+			end
 		end
 	end
 
 	return L, U
 end
 
+local function decomposeLUP(M: Matrix): (Matrix, Matrix, Matrix)
+	local P = pivot(M)
+	local PM = multiply(P, M)
+	local L, U = decomposeLU(PM)
+	return L, U, P
+end
+
 -- Public
 
-function module.solve(A: Matrix, b: Matrix): Vector
-	local A1, pi = decomposeLUP(A)
-	local L, U = splitLU(A1)
-
+function module.solve(A: Matrix, b: Matrix): Matrix
 	local n = #A
+	local L, U, P = decomposeLUP(A)
+	local Pb = multiply(P, b)
+	
 	local x, y = {}, {}
 	for i = 1, n do
 		x[i], y[i] = 0, 0
 	end
-
+	
 	for i = 1, n do
 		local sum = 0
 		for j = 1, i do
 			sum = sum + L[i][j] * y[j]
 		end
-		y[i] = b[pi[i]][1] - sum
+		y[i] = Pb[i][1] - sum
 	end
-
+	
 	for i = n, 1, -1 do
 		local sum = 0
 		for j = i + 1, n do
@@ -114,8 +128,13 @@ function module.solve(A: Matrix, b: Matrix): Vector
 		end
 		x[i] = (y[i] - sum) / U[i][i]
 	end
-
-	return x
+	
+	local xM = {}
+	for i, v in x do
+		xM[i] = {v}
+	end
+	
+	return xM
 end
 
 function module.multiply(A: Matrix, B: Matrix): Matrix

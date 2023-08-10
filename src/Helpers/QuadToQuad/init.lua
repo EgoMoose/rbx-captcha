@@ -48,9 +48,9 @@ function module.quadToQuad(quadP: Quad, quadQ: Quad): (Vector3) -> (Vector3)
 	local solved = MatrixHelper.solve(A, Q)
 
 	local T = {
-		{solved[1], solved[2], solved[3]},
-		{solved[4], solved[5], solved[6]},
-		{solved[7], solved[8], 1},
+		{solved[1][1], solved[2][1], solved[3][1]},
+		{solved[4][1], solved[5][1], solved[6][1]},
+		{solved[7][1], solved[8][1], 1},
 	}
 
 	return function(vertex: Vector3)
