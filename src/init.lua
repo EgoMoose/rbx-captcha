@@ -26,9 +26,13 @@ local responseBind = Instance.new("BindableEvent")
 
 function Respond.OnServerInvoke(player: Player, unique: string, answer: string)
 	responseBind:Fire(player, unique, answer)
-	local result = progressing[unique]:expect()
-	progressing[unique] = nil
-	return result
+	local progress = progressing[unique]
+	if progress then
+		local result = progress:expect()
+		progressing[unique] = nil
+		return result
+	end
+	return false
 end
 
 -- Public
