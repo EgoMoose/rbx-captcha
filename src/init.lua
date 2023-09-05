@@ -173,8 +173,8 @@ function module.request(player: Player, length: number): boolean
 	return result
 end
 
-function module.setup()
-	CaptchaClient.Parent = ReplicatedStorage
+function module.setup(parent: Instance?)
+	CaptchaClient.Parent = parent or ReplicatedStorage
 end
 
 --
