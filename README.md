@@ -17,4 +17,4 @@ This module creates a captcha-like image out of primitives and then provides tha
 
 ## Demo
 
-You can see an example use of this system in the demo folder / `develop.project.json`. However, the general jist is that the captcha client will fire an event when the server requests a captcha verification from the client. The client will then have to send a response to the server where it will be verified. Both the client and the server will be provided w/ a response of `true / false` depending on if the player successfully inputted the correct captcha.
+You can see an example use of this system in the demo folder / `develop.project.json`. However, the general gist is that the captcha client will fire an event when the server requests a captcha verification from the client. The client will then have to send a response to the server where it will be verified. Both the client and the server will be provided w/ a response of `true / false` depending on if the player successfully inputted the correct captcha.
