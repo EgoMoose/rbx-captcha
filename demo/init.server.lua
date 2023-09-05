@@ -2,7 +2,7 @@ local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local Captcha = require(ServerScriptService.ServerPackages.RbxCaptcha)
+local Captcha = require(ServerScriptService.ServerPackages.RbxCaptcha) :: any
 local CaptchaApp = script:WaitForChild("CaptchaApp")
 local CaptchaUI = script:WaitForChild("CaptchaUI")
 

@@ -15,7 +15,7 @@ local AABB = require(Helpers:WaitForChild("AABB"))
 local Render = require(Helpers:WaitForChild("Render"))
 local Random = require(Helpers:WaitForChild("Random"))
 
-local Promise = require(script.Parent:WaitForChild("Promise"))
+local Promise = require(script.Parent:WaitForChild("Promise")) :: any
 
 local module = {}
 

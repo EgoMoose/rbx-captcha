@@ -4,7 +4,7 @@
 -- The request is made from the server, the client sends back their response
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local CaptchaClient = require(ReplicatedStorage:WaitForChild("CaptchaClient"))
+local CaptchaClient = require(ReplicatedStorage:WaitForChild("CaptchaClient")) :: any
 
 local screen = script.Parent
 local content = screen:WaitForChild("Body"):WaitForChild("Content")
